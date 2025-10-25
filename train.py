@@ -19,7 +19,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train():
     wandb.init(
         project="pnet-training",
-        name="experiment_1",
+        name="Exp2. Directed nodes",
         config={
             "epochs": EPOCHS,
             "learning_rate": LR,
@@ -35,17 +35,16 @@ def train():
     Xsample, _ = generate_data(True, 0)
     N, gene_dim = Xsample.shape
     pathway_dim = len(read_used_pathways())
-    hidden_dim = 8
+    hidden_dim = 128
     output_dim = 2
     gene_mask = generate_mask_matrix().to(device)
 
     print(f"Gene mask shape: {gene_mask.shape}")
     print(f"Gene dim: {gene_dim}, Pathway dim: {pathway_dim}")
 
-    model = PNet(0, gene_dim, pathway_dim, hidden_dim,
-                 output_dim, gene_mask).to(device)
+    model = PNet(0, gene_dim, pathway_dim, hidden_dim, output_dim, gene_mask).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-5)
 
     training_losses = []
     validation_losses = []

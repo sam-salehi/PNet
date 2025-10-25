@@ -21,22 +21,29 @@ class MaskedLinear(nn.Module):
 
 class PNet(nn.Module):
     def __init__(
-        self, input_dim, gene_dim, pathway_dim, hidden_dim, output_dim, gene_mask
+        self,
+        input_dim,
+        gene_dim,
+        pathway_dim,
+        hidden_dim=128,
+        output_dim=2,
+        gene_mask=None,
     ):
         super().__init__()
         # self.l1 = nn.Linear(input_dim, gene_dim)
-        self.l2 = MaskedLinear(
-            gene_dim, pathway_dim, gene_mask.T
-        )  # Transpose if needed
+        self.l2 = MaskedLinear(gene_dim, pathway_dim, gene_mask.T)
+        self.geneout = nn.Linear(pathway_dim, output_dim)
         self.l3 = nn.Linear(pathway_dim, hidden_dim)
+        self.pathout = nn.Linear(hidden_dim, output_dim)
+
         self.l4 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         # x = F.relu(self.l1(x))
         x = F.relu(self.l2(x))
+        g = F.sigmoid(self.geneout(x))
         x = F.relu(self.l3(x))
-        x = F.softmax(self.l4(x), dim=1)
+        p = F.sigmoid(self.pathout(x))
+        x = F.sigmoid(self.l4(x))
+        x = F.softmax(x + p + g, dim=1)
         return x
-
-
-# TODO: make a three to one layer in th input Make a one to one layer in the input.
